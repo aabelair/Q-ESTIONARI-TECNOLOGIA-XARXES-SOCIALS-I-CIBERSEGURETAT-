@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Campionat de l'Internet Social i Ciberseguretat</title>
+    <style>
+        :root {
+            --primary: #2b5c8f;
+            --primary-light: #eef5fc;
+            --success: #2e7d32;
+            --success-light: #e8f5e9;
+            --error: #c62828;
+            --error-light: #ffebee;
+            --dark: #202124;
+            --light: #ffffff;
+            --gray: #f1f3f4;
+            --border: #dadce0;
+            --accent: #ff9800;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: var(--dark);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--light);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 20px;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 24pt;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #5f6368;
+            font-size: 11pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quiz-meta {
+            display: flex;
+            justify-content: space-between;
+            background: var(--gray);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--gray);
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-section h2 {
+            font-size: 14pt;
+            color: var(--dark);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background-color: var(--light);
+            border: 2px solid var(--border);
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 11pt;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Feedback Classes */
+        .option-btn.correct {
+            background-color: var(--success-light) !important;
+            border-color: var(--success) !important;
+            color: var(--success) !important;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-light) !important;
+            border-color: var(--error) !important;
+            color: var(--error) !important;
+        }
+
+        /* Feedback Modal/Overlay */
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .feedback-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .feedback-card h3 {
+            font-size: 22pt;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .feedback-card p.status-msg {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .feedback-card .explanation {
+            font-size: 11pt;
+            color: #5f6368;
+            background: var(--gray);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .feedback-card.success h3 { color: var(--success); }
+        .feedback-card.fail h3 { color: var(--error); }
+
+        .visual-response {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+
+        .action-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 12pt;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .action-btn:hover {
+            background-color: #1a3d63;
+        }
+
+        /* Final Results View */
+        .results-section {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .results-section h2 {
+            font-size: 24pt;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .score-badge {
+            font-size: 48pt;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        .ranking-msg {
+            font-size: 14pt;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #3c4043;
+            padding: 0 20px;
+        }
+
+        /* SVG Clapping Animation */
+        .clap-svg {
+            width: 120px;
+            height: 120px;
+            animation: clapAnim 0.6s infinite alternate;
+        }
+
+        @keyframes clapAnim {
+            0% { transform: scale(0.9) rotate(-5deg); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* Crying Emoji Style */
+        .cry-emoji {
+            font-size: 70pt;
+            display: block;
+            margin: 10px 0;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="quiz-container">
+        <header>
+            <h1>COMPETICIÓ A L'AULA</h1>
+            <p>Xarxes Socials, Algorismes i Ciberseguretat (Nivell Expert)</p>
+        </header>
+
+        <div id="game-view">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="quiz-meta">
+                <div id="question-number">Pregunta 1 de 30</div>
+                <div id="score-counter">Puntuació: 0 pts</div>
+            </div>
+
+            <div class="question-section">
+                <h2 id="question-text">Carregant la pregunta...</h2>
+                <div class="options-grid" id="options-container">
+                    <!-- Les opcions es carregaran dinàmicament aquí -->
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="results-view">
+            <h2>🏆 Fi de la Competició! 🏆</h2>
+            <p>Heu completat les 30 preguntes de nivell difícil del dossier editorial.</p>
+            <div class="score-badge" id="final-score">0 / 30</div>
+            <div class="ranking-msg" id="ranking-message"></div>
+            <button class="action-btn" onclick="restartQuiz()">Torna a jugar / Nova Competició</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICACIÓ / POPUP DE RESPOSTA -->
+    <div class="feedback-overlay" id="feedback-overlay">
+        <div class="feedback-card" id="feedback-card">
+            <div id="feedback-visual"></div>
+            <h3 id="feedback-title"></h3>
+            <p class="status-msg" id="feedback-status-text"></p>
+            <div class="explanation" id="feedback-explanation"></div>
+            <button class="action-btn" id="next-btn" onclick="closeFeedback()">Següent Pregunta ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+    {
+        "id": 1,
+        "question": "Segons els resultats de Meta Platforms per al primer trimestre de 2026 (Q1 2026), quina és la xifra oficial de 'Family Daily Active People' (persones actives diàries al conjunt de les seves aplicacions)?",
+        "options": [
+            "3,58 mil milions de persones",
+            "3,56 mil milions de persones",
+            "3,12 mil milions de persones",
+            "2,85 mil milions de persones"
+        ],
+        "correct": 1,
+        "explanation": "El dossier indica que Meta va registrar 3,56 mil milions de persones actives diàries el març de 2026 (mentre que el desembre de 2025 eren 3,58 mil milions)."
+    },
+    {
+        "id": 2,
+        "question": "Quin any es va llançar originalment la xarxa professional LinkedIn, per qui va ser fundada i quina empresa tecnològica la va adquirir l'any 2016?",
+        "options": [
+            "Llançada el 2004 per Mark Zuckerberg; adquirida per Meta Platforms.",
+            "Llançada el 2003 per Reid Hoffman i altres; adquirida per Microsoft.",
+            "Llançada el 2006 per Jack Dorsey; adquirida per Alphabet/Google.",
+            "Llançada el 2010 per Kevin Systrom; adquirida per Amazon."
+        ],
+        "correct": 1,
+        "explanation": "LinkedIn va ser llançada el 2003 per Reid Hoffman i altres fundadors, i Microsoft la va comprar l'any 2016."
+    },
+    {
+        "id": 3,
+        "question": "En el bloc d'addicció digital del dossier de ciberseguretat, quines són les 'tres paraules clau' exactes utilitzades per diagnosticar o descriure una situació de dependència?",
+        "options": [
+            "Dependència, Obsessió i Ansietat digital",
+            "Hiperconnectivitat, Aïllament i Consum compulsiu",
+            "Abstinència (malestar), Tolerància (més temps) i Pèrdua de control (no poder parar)",
+            "Phishing, Cyberbullying i FOMO generalitzat"
+        ],
+        "correct": 2,
+        "explanation": "Les tres paraules clau són Abstinència (malestar), Tolerància (més temps) i Pèrdua de control (sé que em perjudica però no puc parar)."
+    },
+    {
+        "id": 4,
+        "question": "Segons la 'Idea clau' del dossier d'origen de les xarxes socials, quines són les quatre dimensions que combinen les plataformes actuals com a ecosistemes?",
+        "options": [
+            "Perfil personal, mur d'amics, servei de missatgeria i filtres fotogràfics.",
+            "La relació social, la creació de contingut, la recomanació algorísmica i el negoci publicitari.",
+            "La privacitat configurada, la seguretat de dades, la identitat digital i l'empremta personal.",
+            "El programari obert, el maquinari mòbil, les xarxes Wi-Fi i la intel·ligència artificial."
+        ],
+        "correct": 1,
+        "explanation": "Les plataformes combinen relació social, creació de contingut, recomanació algorísmica (què apareix a la pantalla) i negoci publicitari."
+    },
+    {
+        "id": 5,
+        "question": "Segons la breu història de l'Internet social presentada, quin tipus d'entorns definien l'experiència digital dels usuaris durant els anys 90?",
+        "options": [
+            "Vídeos curts verticals i algorismes de recomanació personalitzada.",
+            "Fòrums, xats, IRC, correu electrònic i primeres comunitats digitals.",
+            "Auge de perfils personals a MySpace, Facebook i plataformes com YouTube.",
+            "Sistemes basats completament en intel·ligència artificial i realitat augmentada."
+        ],
+        "correct": 1,
+        "explanation": "Els anys 90 van estar dominats pels fòrums, xats, IRC, correu electrònic i les primeres comunitats primitives."
+    },
+    {
+        "id": 6,
+        "question": "Quina és la diferència conceptual central entre un 'feed social clàssic' i un 'feed algorítmic modern' descrita en els materials?",
+        "options": [
+            "El clàssic és privat i requereix subscripció paga; el modern es finança amb criptomonedes.",
+            "El clàssic responia a «què han publicat les persones que segueixo?» i l'algorítmic respon a «què és més probable que em faci quedar-me mirant?».",
+            "El clàssic només ordenava per ordre alfabètic de països i el modern per l'edat de l'usuari.",
+            "El clàssic s'actualitzava un cop a la setmana i el modern utilitza la geolocalització per apagar el mòbil."
+        ],
+        "correct": 1,
+        "explanation": "El canvi central és que el feed algorítmic prediu què ens retindrà més temps en lloc de basar-se en un ordre cronològic de persones seguides."
+    },
+    {
+        "id": 7,
+        "question": "Dins del processament de senyals d'un algoritme de recomanació, quin dels següents paràmetres és classificat de manera explícita com un 'senyal implícit'?",
+        "options": [
+            "Fer un 'like' o prémer el botó de seguir a un creador.",
+            "Escriure un comentari a la publicació o prémer 'compartir'.",
+            "El temps de visualització, les pauses, les repeticions i la velocitat de desplaçament (scroll).",
+            "Guardar la publicació a favorits o fer una subscripció premium de pagament."
+        ],
+        "correct": 2,
+        "explanation": "Els senyals implícits són accions indirectes que el sistema mesura automàticament (temps, pauses, scroll, ignorar continguts) sense que l'usuari premi un botó concret."
+    },
+    {
+        "id": 8,
+        "question": "Quina xifra d'usuaris actius mensuals globals (MAU) i usuaris diaris (DAU) va reportar Snap Inc. oficialment en els seus resultats del quart trimestre de 2025 (Q4 2025)?",
+        "options": [
+            "946 milions de MAU globals i 474 milions de DAU.",
+            "1,3 mil milions de MAU globals i 600 milions de DAU.",
+            "631 milions de MAU globals i 300 milions de DAU.",
+            "240 milions de MAU globals i 120 milions de DAU."
+        ],
+        "correct": 0,
+        "explanation": "El dossier reflecteix que en el tancament de Q4 2025, Snap Inc. disposava de 946M de MAU (mensuals) i 474M de DAU (diaris)."
+    },
+    {
+        "id": 9,
+        "question": "A quina quantitat d'usuaris actius mensuals globals va arribar oficialment el motor de cerca visual i inspiració Pinterest al primer trimestre de 2026 (Q1 2026)?",
+        "options": [
+            "126,8 milions d'usuaris",
+            "900 milions d'usuaris",
+            "631 milions d'usuaris",
+            "240 milions d'usuaris"
+        ],
+        "correct": 2,
+        "explanation": "Pinterest va informar oficialment d'una xifra de 631 milions d'usuaris actius mensuals globals durant el Q1 de 2026."
+    },
+    {
+        "id": 10,
+        "question": "D'on deriva originalment la plataforma de directes Twitch, quin era el seu enfocament inicial, i quina multinacional la va comprar el 2014?",
+        "options": [
+            "Deriva de Musical.ly, enfocada en balls; comprada per ByteDance.",
+            "Deriva de Douyin, enfocada en comerç; comprada per Meta Platforms.",
+            "Deriva de Justin.tv, es va consolidar el 2011 en videojocs; comprada per Amazon el 2014.",
+            "Deriva d'Skype, enfocada en videotrucades; comprada per Microsoft Corporation."
+        ],
+        "correct": 2,
+        "explanation": "Twitch deriva de Justin.tv, es va centrar en videojocs i streaming en directe a partir de 2011, i Amazon la va adquirir el 2014."
+    },
+    {
+        "id": 11,
+        "question": "Què signifiquen exactament les sigles TRIC utilitzades en el dossier de benestar digital de l'alumnat jove?",
+        "options": [
+            "Tècniques de Reducció d'Impacte de Computadores",
+            "Tecnologies de la Relació, la Informació i la Comunicació",
+            "Tendències i Rutes en Intel·ligència de Canals",
+            "Tractament de Riscos Informàtics de la Comunitat"
+        ],
+        "correct": 1,
+        "explanation": "Les TRIC fan referència a les Tecnologies de la Relació, la Informació i la Comunicació, posant un èmfasi especial en la part 'social' i relacional."
+    },
+    {
+        "id": 12,
+        "question": "Quin és l'origen cronològic d'Instagram, quins en van ser els creadors i en quin any es va integrar dins de l'empresa Meta (llavors Facebook)?",
+        "options": [
+            "Creada el 2004 per Mark Zuckerberg; integrada a Meta el 2008.",
+            "Creada el 2009 per Jan Koum i Brian Acton; integrada a Meta el 2014.",
+            "Creada el 2010 per Kevin Systrom i Mike Krieger; comprada per Meta el 2012.",
+            "Creada el 2011 per Evan Spiegel i Bobby Murphy; comprada per Snap Inc. el 2013."
+        ],
+        "correct": 2,
+        "explanation": "Instagram va néixer el 2010 de la mà de Kevin Systrom i Mike Krieger com una app de fotos, i Meta la va comprar molt ràpidament, el 2012."
+    },
+    {
+        "id": 13,
+        "question": "Quina és l'escala aproximada d'usuaris actius mensuals globals que els informes de mercat de 2026 assignen a la xarxa social TikTok?",
+        "options": [
+            "Entre 500 i 750 milions d'usuaris mensuals.",
+            "Al voltant d'1,7 i 2,0 mil milions d'usuaris mensuals.",
+            "Supera els 3,5 mil milions d'usuaris diaris oficials.",
+            "Exactament 126,8 milions d'usuaris actius mensuals."
+        ],
+        "correct": 1,
+        "explanation": "Les estimacions de mercat de 2026 situen TikTok a una escala global d'entre 1,7 i 2,0 mil milions d'usuaris mensuals (MAU)."
+    },
+    {
+        "id": 14,
+        "question": "Segons la terminologia del dossier de ciberseguretat, com es defineix exactament el concepte d' 'Empremta digital'?",
+        "options": [
+            "El patró biomètric que fa servir el telèfon mòbil per registrar el polze de l'usuari.",
+            "El rastre invisible que deixem a Internet amb les nostres publicacions, cerques, fotos, comentaris i interaccions.",
+            "El conjunt de contrasenyes xifrades que un gestor de claus emmagatzema de manera segura.",
+            "La llicència que les botigues oficials d'apps utilitzen per verificar que el mòbil no està infectat."
+        ],
+        "correct": 1,
+        "explanation": "L'empremta digital és el rastre (actiu i passiu) que una persona deixa darrere seu quan navega o utilitza xarxes a Internet."
+    },
+    {
+        "id": 15,
+        "question": "Quins tres ex-treballadors de l'empresa de pagaments PayPal van fundar la plataforma de vídeo YouTube l'any 2005?",
+        "options": [
+            "Reid Hoffman, Reid Spiegel i Evan Sharp.",
+            "Chad Hurley, Steve Chen i Jawed Karim.",
+            "Jan Koum, Brian Acton i Pavel Durov.",
+            "Jack Dorsey, Biz Stone i Mark Zuckerberg."
+        ],
+        "correct": 1,
+        "explanation": "YouTube va ser creat el 2005 per Chad Hurley, Steve Chen i Jawed Karim, antics empleats de PayPal, i adquirit per Google el 2006."
+    },
+    {
+        "id": 16,
+        "question": "En el funcionament de l'economia de l'atenció, de quina manera actua el mecanisme anomenat 'Recompensa variable'?",
+        "options": [
+            "Ajustant automàticament el preu dels anuncis de publicitat segons l'hora del dia que s'obre l'aplicació.",
+            "Fent que el contingut següent sigui completament desconegut o impredictible per a l'usuari, generant un efecte sorpresa que enganxa.",
+            "Permetent als usuaris guanyar monedes digitals que canvien de valor segons els 'likes' obtinguts.",
+            "Canviant el tipus de notificació sonora per evitar que el cervell s'acostumi sempre al mateix soroll."
+        ],
+        "correct": 1,
+        "explanation": "La recompensa variable és la dinàmica psicològica d'oferir premis o continguts d'impacte incert (com una màquina escurabutxaques), fent que vulguem continuar fent scroll."
+    },
+    {
+        "id": 17,
+        "question": "Quines figures claus van fundar Twitter l'any 2006, abans de ser venuda a Elon Musk el 2022 i reanomenada com a X l'any 2023?",
+        "options": [
+            "Kevin Systrom, Mike Krieger, Bobby Murphy i Reggie Brown.",
+            "Jack Dorsey, Biz Stone, Evan Williams i Noah Glass.",
+            "Pavel Durov, Nikolai Durov, Jan Koum i Brian Acton.",
+            "Ben Silbermann, Paul Sciarra, Evan Sharp i Jack Hurley."
+        ],
+        "correct": 1,
+        "explanation": "Twitter va ser fundada el 2006 per Jack Dorsey, Biz Stone, Evan Williams i Noah Glass."
+    },
+    {
+        "id": 18,
+        "question": "En relació amb la història de WhatsApp, en quin any es va crear per Jan Koum i Brian Acton, i quan la va comprar Meta?",
+        "options": [
+            "Creada el 2004 i adquirida el 2010.",
+            "Creada el 2009 i adquirida el 2014.",
+            "Creada el 2011 i adquirida el 2018.",
+            "Creada el 2006 i adquirida el 2023."
+        ],
+        "correct": 1,
+        "explanation": "WhatsApp va ser fundada el 2009 amb l'objectiu d'evitar els costosos SMS tradicionals, i Meta (Facebook) la va comprar el 2014."
+    },
+    {
+        "id": 19,
+        "question": "Quin símptoma o concepte d'addicció es defineix textualment com el 'malestar o irritabilitat quan no es can pot accedir a Internet o al dispositiu'?",
+        "options": [
+            "Tolerància excessiva",
+            "Abstinència",
+            "Pèrdua de control",
+            "Hiperconnectivitat conscient"
+        ],
+        "correct": 1,
+        "explanation": "L'abstinència és el malestar emocional i psicològic derivat d'estar desconnectat, no poder mirar notificacions o no tenir accés al telèfon mòbil."
+    },
+    {
+        "id": 20,
+        "question": "Davant els atacs de Phishing (estafes digitals reactives), quina és la 'Regla d'or' descrita per no caure en el parany?",
+        "options": [
+            "Respondre al missatge sol·licitant de manera immediata el DNI o identificació del remitent.",
+            "Si un missatge et posa pressa, por o eufòria, para abans de clicar. Les estafes funcionen quan reaccionem sense pensar.",
+            "Compartir l'enllaç ràpidament amb familiars o amics per provar si a ells també els demana contrasenya.",
+            "Apagar el rúter de casa i canviar el PIN complet del mòbil de manera immediata."
+        ],
+        "correct": 1,
+        "explanation": "La regla d'or explicita que les estafes juguen amb emocions intenses (urgència, guany sobtat, por). Aturar-se a pensar és la millor barrera."
+    },
+    {
+        "id": 21,
+        "question": "Quina dada de 'Daily Active Uniques' (usuaris únics diaris) va reportar formalment la xarxa de fòrums Reddit en el primer trimestre de 2026 (Q1 2026)?",
+        "options": [
+            "240 milions d'usuaris actius diaris",
+            "126,8 milions de Daily Active Uniques",
+            "631 milions de membres globals",
+            "946 milions d'usuaris diaris registrats"
+        ],
+        "correct": 1,
+        "explanation": "Segons els informes financers de Q1 2026 tancats en els dossiers, Reddit va tancar amb un volum de 126,8 milions d'usuaris diaris únics."
+    },
+    {
+        "id": 22,
+        "question": "Quin consell recull el punt número 9 del 'Decàleg de ciutadania digital' en relació amb el futur laboral o acadèmic dels joves?",
+        "options": [
+            "Configurar la contrasenya combinant una frase llarga i el dia de la setmana.",
+            "Cuida la teva empremta digital: també parla de tu davant futurs estudis o feines.",
+            "Desactivar les notificacions de totes les apps de jocs abans d'anar a dormir.",
+            "No utilitzar mai xarxes Wi-Fi públiques si s'ha d'entrar a l'aula virtual de l'institut."
+        ],
+        "correct": 1,
+        "explanation": "El punt 9 adverteix que les publicacions, fotos o comentaris antics formen part d'una empremta digital que empreses o universitats poden revisar."
+    },
+    {
+        "id": 23,
+        "question": "Quins són els dos germans d'origen rus que van fundar l'aplicació de missatgeria i canals Telegram l'any 2013?",
+        "options": [
+            "Jan Koum i Brian Acton.",
+            "Pavel i Nikolai Durov.",
+            "Chad Hurley i Steve Chen.",
+            "Kevin Systrom i Mike Krieger."
+        ],
+        "correct": 1,
+        "explanation": "Telegram va ser creada el 2013 pels germans Pavel i Nikolai Durov, configurant una app amb fort èmfasi en els canals i la difusió massiva."
+    },
+    {
+        "id": 24,
+        "question": "Dins de l'impacte psicològic i riscos digitals s'esmenta el concepte de FOMO. Com es tradueix o defineix textualment en el material?",
+        "options": [
+            "La por de perdre's alguna cosa, que pot portar a revisar constantment notificacions i 'stories'.",
+            "La ràbia extrema generada en ser bloquejat d'un grup de WhatsApp escolar.",
+            "L'obsessió per tenir un perfil professional completament artificial a xarxes com LinkedIn.",
+            "L'estrès provocat per tenir més de 5 aplicacions de missatgeria instal·lades de manera simultània."
+        ],
+        "correct": 0,
+        "explanation": "El FOMO (Fear of Missing Out) es tradueix com la por a quedar-se fora o perdre's activitats de la comunitat, generant ús compulsiu."
+    },
+    {
+        "id": 25,
+        "question": "En el mòdul de l'economia de l'atenció, com es defineix exactament el recurs de disseny anomenat 'Scroll infinit'?",
+        "options": [
+            "El bloqueig del telèfon mòbil quan l'usuari supera les 3 hores d'ús diari de pantalla.",
+            "Un disseny de la interfície que elimina el final de la pantalla i facilita continuar consumint contingut de manera contínua.",
+            "La capacitat de rebre missatges d'àudio sense límit de minuts ni talls a la connexió.",
+            "El rànquing d'amics ordenat automàticament segons els 'likes' mutus rebuts."
+        ],
+        "correct": 1,
+        "explanation": "L'scroll infinit elimina la fricció o la necessitat de passar de pàgina, provocant que el consum de contingut continuï de manera mecànica."
+    },
+    {
+        "id": 26,
+        "question": "Com defineix el dossier el risc digital greu anomenat 'Grooming'?",
+        "options": [
+            "El procés d'instal·lació d'aplicacions des de botigues no oficials de seguretat.",
+            "Adults que intenten guanyar la confiança de menors a través d'Internet amb finalitats abusives.",
+            "La suplantació de la identitat d'una entitat bancària per robar diners mitjançant un SMS fals.",
+            "La idealització visual extrema de la pròpia imatge física utilitzant filtres de realitat augmentada."
+        ],
+        "correct": 1,
+        "explanation": "El grooming és un delicte digital que implica l'engany o manipulació de menors per part d'adults guanyant-se la seva confiança en línia."
+    },
+    {
+        "id": 27,
+        "question": "Quina és la 'Norma de classe' explícita recollida en la introducció del dossier didàctic de ciberseguretat?",
+        "options": [
+            "S'ha de prohibir l'entrada del telèfon a qualsevol aula o centre educatiu sense excepcions.",
+            "No cal deixar d'utilitzar el mòbil. Cal aprendre quan, com, per a què i amb quins límits el fem servir.",
+            "L'alumnat només pot activar les notificacions durant les hores de pati o descans.",
+            "Es recomana tenir exactament la mateixa contrasenya per a l'aula virtual i per a les xarxes personals."
+        ],
+        "correct": 1,
+        "explanation": "El dossier promou que la tecnologia és una eina potent, per la qual cosa l'objectiu pedagògic és l'autonomia, l'ús crític i el límit saludable."
+    },
+    {
+        "id": 28,
+        "question": "Quin d'aquests és un símptoma físic derivat de l'ús excessiu de pantalles descrit en el bloc de benestar digital?",
+        "options": [
+            "Ulls secs, fatiga visual o visió borrosa, així com mal de cap, dolor de coll o d'esquena.",
+            "Pèrdua temporal del sentit de l'olfacte a causa de les ones electromagnètiques.",
+            "Hiperactivitat muscular instantània als dits de les mans amb capacitat de tecleig infinit.",
+            "Marejos severs produïts únicament per utilitzar aplicacions descarregades de botigues oficials."
+        ],
+        "correct": 0,
+        "explanation": "Els problemes de fatiga visual, ulls secs, insomni, sedentarisme i mals de coll/esquena són els símptomes físics recollits en el document."
+    },
+    {
+        "id": 29,
+        "question": "En l'Activitat número 2 del dossier ('El semàfor del mòbil'), a quina situació o estat correspon la llum o color Groc?",
+        "options": [
+            "Ús saludable de la tecnologia per estudiar, fer tasques i comunicar-se amb límits de temps clar.",
+            "Estat d'alerta: perdo temps, em distrec sovint o em costa desconnectar de les pantalles.",
+            "Situació de risc problemàtic alt: dormo menys hores de les habituals i discuteixo amb la família.",
+            "Accés bloquejat totalment per haver clicat un enllaç sospitós de phishing bancari."
+        ],
+        "correct": 1,
+        "explanation": "El color groc és l'estat d'alerta o advertència on l'ús del mòbil comença a menjar temps, generar distraccions o dificultats de control."
+    },
+    {
+        "id": 30,
+        "question": "Segons la fitxa completa de plataformes, quina és l'organització i ús bàsic que defineix l'aplicació Discord?",
+        "options": [
+            "Motor de cerca visual centrat en taulers d'imatges ordenades per intencions de compra comercial.",
+            "Plataforma organitzada per servidors, comunitats i canals de veu o text en temps real, molt usada originalment en entorns de videojocs.",
+            "Xarxa social efímera on només es pot fer una publicació al dia quan arriba una notificació aleatòria simultània.",
+            "Un perfil professional tancat comprat per Amazon el 2014 per oferir exclusivament feines de programació."
+        ],
+        "correct": 1,
+        "explanation": "Discord s'organitza en servidors i canals de veu/text, sumant actualment entre 200 i 260 milions d'usuaris mensuals estimats."
+    }
+];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionTextElem = document.getElementById('question-text');
+        const optionsContainerElem = document.getElementById('options-container');
+        const questionNumberElem = document.getElementById('question-number');
+        const scoreCounterElem = document.getElementById('score-counter');
+        const progressBarElem = document.getElementById('progress-bar');
+        
+        const gameViewElem = document.getElementById('game-view');
+        const resultsViewElem = document.getElementById('results-view');
+        const finalScoreElem = document.getElementById('final-score');
+        const rankingMessageElem = document.getElementById('ranking-message');
+
+        const feedbackOverlay = document.getElementById('feedback-overlay');
+        const feedbackCard = document.getElementById('feedback-card');
+        const feedbackVisual = document.getElementById('feedback-visual');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackStatusText = document.getElementById('feedback-status-text');
+        const feedbackExplanation = document.getElementById('feedback-explanation');
+
+        // Imatge d'aplaudiments en SVG natiu per màxima compatibilitat i disseny net
+        const applauseSVG = `
+            <svg class="clap-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="#e8f5e9"/>
+                <text x="50" y="45" font-size="30" text-anchor="middle">👏</text>
+                <text x="30" y="75" font-size="20" text-anchor="middle">✨</text>
+                <text x="70" y="75" font-size="20" text-anchor="middle">✨</text>
+                <path d="M 35 60 Q 50 75 65 60" stroke="#2e7d32" stroke-width="4" fill="none" stroke-linecap="round"/>
+            </svg>
+        `;
+
+        // Emoticono plorant per al cas de fallar
+        const cryEmojiHTML = `<span class="cry-emoji">😭</span>`;
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            
+            // Actualitzar textos
+            questionNumberElem.innerText = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+            questionTextElem.innerText = `${currentQuestion.id}. ${currentQuestion.question}`;
+            scoreCounterElem.innerText = `Puntuació: ${score} pts`;
+            
+            // Progress bar
+            const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+            progressBarElem.style.width = `${progressPercent}%`;
+
+            // Netejar opcions anteriors
+            optionsContainerElem.innerHTML = '';
+
+            // Generar botons d'opcions
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.innerText = option;
+                button.onclick = () => checkAnswer(index);
+                optionsContainerElem.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const currentQuestion = quizData[currentQuestionIndex];
+            const buttons = optionsContainerElem.getElementsByClassName('option-btn');
+            
+            // Deshabilitar tots els botons per evitar múltiples clics
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+            }
+
+            const isCorrect = selectedIndex === currentQuestion.correct;
+
+            // Aplicar colors als botons en segon pla
+            buttons[currentQuestion.correct].classList.add('correct');
+            if (!isCorrect) {
+                buttons[selectedIndex].classList.add('wrong');
+            }
+
+            // Configurar el popup/modal de feedback immediat segons condicions de l'usuari
+            if (isCorrect) {
+                score++;
+                scoreCounterElem.innerText = `Puntuació: ${score} pts`;
+                
+                feedbackCard.className = "feedback-card success";
+                feedbackVisual.innerHTML = applauseSVG;
+                feedbackTitle.innerText = "¡MOLT BÉ! ¡CORRECTE! 🌟";
+                feedbackStatusText.innerText = "Heu sumat un punt per a la vostra classe.";
+            } else {
+                feedbackCard.className = "feedback-card fail";
+                feedbackVisual.innerHTML = cryEmojiHTML;
+                feedbackTitle.innerText = "¡OOOOOHHHHH! 😭";
+                feedbackStatusText.innerText = "¡Resposta incorrecta!";
+            }
+
+            feedbackExplanation.innerText = currentQuestion.explanation;
+            
+            // Mostrar l'overlay de feedback
+            setTimeout(() => {
+                feedbackOverlay.style.display = 'flex';
+            }, 300);
+        }
+
+        function closeFeedback() {
+            feedbackOverlay.style.display = 'none';
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            gameViewElem.style.display = 'none';
+            resultsViewElem.style.display = 'block';
+            progressBarElem.style.width = '100%';
+            finalScoreElem.innerText = `${score} / ${quizData.length}`;
+
+            let rankingMsg = "";
+            const ratio = score / quizData.length;
+
+            if (ratio >= 0.9) {
+                rankingMsg = "🥇 NIVELL ABSOLUT EXCELLENT! Sou autèntics líders digitals crítics. Les xarxes i la seguretat no tenen secrets per a vosaltres! Copa de campions de classe! 🏆";
+            } else if (ratio >= 0.7) {
+                rankingMsg = "🥈 EXCEL·LENT NIVELL! Teniu un criteri fantàstic sobre l'economia de l'atenció i la protecció de dades. Molt bona feina d'equip! 🚀";
+            } else if (ratio >= 0.5) {
+                rankingMsg = "🥉 BÉ, PERÒ CAL ALERTA! Heu aprovat el test difícil, però vigileu amb l'empremta digital i els paranys dels algoritmes. Repasseu el dossier! 📈";
+            } else {
+                rankingMsg = "📉 ALERTA DE RISC DIGITAL! L'algoritme de l'economia de l'atenció us està guanyant la partida. Cal que estigueu més atents als senyals de phishing i el benestar digital! 📋";
+            }
+
+            rankingMessageElem.innerText = rankingMsg;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsViewElem.style.display = 'none';
+            gameViewElem.style.display = 'block';
+            loadQuestion();
+        }
+
+        // Iniciar el joc en obrir la pàgina
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
